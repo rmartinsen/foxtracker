@@ -1,10 +1,8 @@
 phases:
   build:
     commands:
-      - echo Boom mambo! `date`
+      - echo Boom
   post_build:
     commands:
-      - echo Bomm again! `date`
-artifacts:
-  files:
-    - README.md
+      - echo Bomm
+
