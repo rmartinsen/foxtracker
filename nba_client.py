@@ -13,7 +13,6 @@ class NBAClient():
         self.teams = self._get_teams()
 
     def _get_anchor_date(self):
-        return '20181121'
         return datetime.today().strftime('%Y%m%d')
 
     def _get_teams(self):

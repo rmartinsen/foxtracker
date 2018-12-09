@@ -13,8 +13,10 @@ def publish(game_summary):
     client.publish(TopicArn=pub_arn, Message=game_summary, Subject='Game Over')
 
 
-def main():
-    client = NBAClient()
+
+def main(anchor_date=None):
+
+    client = NBAClient(anchor_date)
 
     game_data = client.get_todays_scores('SAC')[0]
     game_id = game_data['gameId']
