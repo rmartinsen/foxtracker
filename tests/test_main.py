@@ -7,6 +7,3 @@ from game_summary import main
 def test_main(publish):
     summary = main(anchor_date='20181121')
     assert 'Fox' in summary
-
-def test_bad():
-    assert False
