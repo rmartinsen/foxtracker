@@ -1,8 +1,6 @@
+version: 0.2
+
 phases:
   build:
     commands:
-      - echo Boom
-  post_build:
-    commands:
-      - echo Bomm
-
+      - echo Build started on `date`
