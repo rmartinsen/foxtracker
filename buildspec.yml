@@ -5,5 +5,5 @@ phases:
     commands:
       - echo Build started on `date`
       - pip install -r requirements.txt
-      - pytest
+      - python -m pytest
       - echo Build ended on `date`
