@@ -1,12 +1,10 @@
 from datetime import datetime
 import requests
 
-endpoints = {
-    'endpoints': 'http://data.nba.net/10s/prod/v1/today.json',
+endpoints = {'endpoints': 'http://data.nba.net/10s/prod/v1/today.json',
     'scoreboard': 'http://data.nba.net/10s/prod/v2/{}/scoreboard.json',
     'teams': 'http://data.nba.net/10s/prod/v2/2018/teams.json',
-    'boxscore': 'http://data.nba.net/10s/prod/v1/{}/{}_boxscore.json'
-}
+    'boxscore': 'http://data.nba.net/10s/prod/v1/{}/{}_boxscore.json'}
 
 
 class NBAClient():
@@ -29,20 +27,22 @@ class NBAClient():
 
         if team:
             team_id = self.teams[team]
-            scoreboard = list(filter(lambda x: x['hTeam']['teamId'] == team_id
-                                             or x['vTeam']['teamId'] == team_id,
-                                     scoreboard))
+            scoreboard = list(
+                filter(lambda x: x['hTeam']['teamId'] == team_id or x['vTeam']['teamId'] == team_id,
+                       scoreboard))
         return scoreboard
 
-    def _get_boxscore(self, game_id):
+    def get_boxscore(self, game_id):
         boxscore = self._get_from_url('boxscore', url_formatters=[self.anchor_date, game_id],
                                       response_keys=['stats', 'activePlayers'])
         return boxscore
 
+    def get_player_from_boxscore(self, boxscore, player_id=1628368):
+        template = '{points}/{totReb}/{assists}/{blocks}/{steals} 3p:{tpm}/{tpa} to:{turnovers}' \
+                   ' min: {min}'
 
-    def get_player_data(self, player_id):
-
-        1628368
+        raw_player = [x for x in boxscore if x['personId'] == str(player_id)][0]
+        return template.format(**raw_player)
 
     @staticmethod
     def _get_from_url(endpoint, url_formatters=[], response_keys=[]):
@@ -52,7 +52,3 @@ class NBAClient():
         for key in response_keys:
             response = response[key]
         return response
-
-
-
-

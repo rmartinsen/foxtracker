@@ -1,0 +1,1 @@
+pub_arn = 'arn:aws:sns:us-west-2:179210174160:Fox'
