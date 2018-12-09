@@ -6,4 +6,6 @@ phases:
       - echo Build started on `date`
       - pip install -r requirements.txt
       - python -m pytest
+      - docker build -t 179210174160.dkr.ecr.us-east-1.amazonaws.com/foxtracker
+      - docker push 179210174160.dkr.ecr.us-east-1.amazonaws.com/foxtracker
       - echo Build ended on `date`

@@ -48,3 +48,6 @@ def main(anchor_date=None):
     publish(summary)
 
     return summary
+
+if __name__ == '__main__':
+    main('20181208')
