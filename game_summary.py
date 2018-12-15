@@ -14,10 +14,11 @@ def publish(game_summary):
 
 
 
+
 def main(anchor_date=None):
 
-    # client = NBAClient(anchor_date)
-    client = NBAClient('20181121')
+    client = NBAClient(anchor_date)
+    # client = NBAClient('20181121')
 
     game_data = client.get_todays_scores('SAC')[0]
     game_id = game_data['gameId']
