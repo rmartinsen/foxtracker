@@ -26,7 +26,7 @@ def main(anchor_date=None):
     boxscore = client.get_boxscore(game_id)
 
     if not game_data['nugget']:
-        raise GameNotOverError
+        quit()
 
     player_stats = client.get_player_from_boxscore(boxscore, 1628368)
 
