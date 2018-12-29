@@ -36,12 +36,6 @@ class NBAClient():
                                       response_keys=['stats', 'activePlayers'])
         return boxscore
 
-    def get_player_from_boxscore(self, boxscore, player_id=1628368):
-        template = '{points}/{totReb}/{assists}/{blocks}/{steals} 3p:{tpm}/{tpa} to:{turnovers}' \
-                   ' min: {min}'
-
-        raw_player = [x for x in boxscore if x['personId'] == str(player_id)][0]
-        return template.format(**raw_player)
 
     @staticmethod
     def _get_from_url(endpoint, url_formatters=[], response_keys=[]):
