@@ -1,0 +1,150 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Parameters:
+  EnvironmentName:
+    Type: String
+    Default: Dev
+    AllowedValues:
+      - Dev
+      - Prod
+
+  DockerImage:
+    Type: String
+    Default: 179210174160.dkr.ecr.us-east-1.amazonaws.com/foxtracker
+
+Mappings:
+  Environment:
+    Dev:
+      VpcCIDR: '10.0.0.0/16'
+      SubnetCIDR1: '10.0.1.0/24'
+      SubnetCIDR2: '10.0.2.0/24'
+    Prod:
+      VpcCIDR: '10.0.0.0/16'
+      SubnetCIDR1: '10.0.1.0/24'
+      SubnetCIDR2: '10.0.2.0/24'
+
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !FindInMap [Environment, !Ref EnvironmentName, VpcCIDR]
+      Tags:
+        - Key: Name
+          Value: !Ref EnvironmentName
+
+  Subnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [ 0, !GetAZs '']
+      CidrBlock: !FindInMap [Environment, !Ref EnvironmentName, SubnetCIDR1]
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} Private Subnet (AZ1)
+
+  Subnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [ 1, !GetAZs '']
+      CidrBlock: !FindInMap [Environment, !Ref EnvironmentName, SubnetCIDR2]
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} Private Subnet (AZ2)
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+
+  GatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref 'VPC'
+      InternetGatewayId: !Ref 'InternetGateway'
+
+  RouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref 'VPC'
+
+  Route:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref RouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  PrivateRouteTableAssociationOne:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref RouteTable
+      SubnetId: !Ref Subnet1
+
+  PrivateRouteTableAssociationOne:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref RouteTable
+      SubnetId: !Ref Subnet2
+
+  ECSCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: !Sub "${EnvironmentName}-Cluster"
+
+  TaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    DependsOn: LogGroup
+    Properties:
+      NetworkMode: awsvpc
+      Cpu: 256
+      ExecutionRoleArn: !Ref ExecutionRole
+      TaskRoleArn: !Ref TaskRole
+      Memory: 0.5GB
+      ContainerDefinitions:
+        - Name: !Sub "${EnvironmentName}-Fargate"
+          Image: !Join ['-', [!Ref DockerImage, !Ref EnvironmentName]]
+
+  ExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${EnvironmentName}-ExecutionRole"
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy'
+
+  TaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${EnvironmentName}-TaskRole"
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: "sts:AssumeRole"
+
+  ScheduledTask:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: "Runs Foxtracker every night"
+      ScheduleExpression: "* * * * *"
+      Target: !Ref TaskDefinition
+
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Join ['-', ['ecs', !Ref EnvironmentName, TaskDef]]
+
+
+
+Outputs:
+  VPCID:
+    Value: !Ref VPC
+    Export:
+      Name: !Sub "${EnvironmentName}-VPCID"
